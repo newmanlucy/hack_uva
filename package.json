@@ -1,0 +1,19 @@
+{
+  "name": "hack_uva",
+  "version": "1.0.0",
+  "description": "some dumb hackathon project",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/newmanlucy/hack_uva.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/newmanlucy/hack_uva/issues"
+  },
+  "homepage": "https://github.com/newmanlucy/hack_uva#readme"
+}
