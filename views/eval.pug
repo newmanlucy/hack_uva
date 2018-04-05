@@ -1,0 +1,27 @@
+doctype html
+html(lang="en")
+head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    meta(http-equiv="X-UA-Compatible" content="ie=edge")
+    link(rel="stylesheet" href="/static/style.less")
+    link(rel="stylesheet" href="/static/style.css")
+    title Evaluation
+body
+    h1 #{instructor_name}
+    h2 Classes Taught
+    ul
+    each val in eval.classes_taught
+        li= val    
+    h2 Evaluation
+    h3 How organzised is this instructor?
+
+    h3 How clear and unserstandable is this instructor?
+    
+    h3 How interesting where this instructor's lectures?
+
+    h3 How positive was the instructor's attitude towards students?
+
+    h3 How accessible was the instructor outside of class?
+
+    h3 Would you recommend this instructor to other students?
