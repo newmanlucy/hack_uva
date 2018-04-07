@@ -1,3 +1,9 @@
 node_modules
 .env
 scraper/env.py
+config
+package-lock.json
+scraper/__pycache__/
+scraper/geckodriver.log
+scraper/scraper.js
+scraper/uchi_evaluations.db

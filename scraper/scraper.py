@@ -58,20 +58,17 @@ def scrape():
     driver = webdriver.Firefox()
     first = True
     for link in links:
-        print(link)
         driver.get(link)
         if first:
             login(driver)
             first = False
         driver.implicitly_wait(1)
         content = get_source_content(driver)
-        print(content)
         if not content:
+            sleep(2)
             continue
         table = get_table(content, "The Instructor")
-        print(parse_table(content, "The Instructor"))
 
-        print(get_instructor(content))
         add_eval(content)
 
         sleep(2)
@@ -98,13 +95,25 @@ def get_class_info(content):
     return split[0], split[1]
 
 def get_instructor(content):
-    exp = "\<strong\>Instructor\(s\):\<\/strong\> (.+)\<br\/\>"
+    exp = "\<strong\>Instructor\(s\):\<\/strong\> (.+)\<br"
     paragraphs = content.find_all("p")
     for p in paragraphs:
         p_text = str(p)
         m = re.search(exp, p_text)
         if m:
             return m.group(1)
+
+def switch_name_order(name):
+    arr = name.split(", ")
+    if len(arr) != 2:
+        raise ValueError("Name not in format 'last, first'")
+    return arr[1] + " " + arr[0] 
+
+def get_instructors(content):
+    instructor_string = get_instructor(content)
+    instr_arr = instructor_string.split("; ")
+    return list(map(lambda x:switch_name_order(x), instr_arr))
+
 
 def get_table(content, title):
     headers = content.find_all("h2")
@@ -145,18 +154,18 @@ def initialize_db():
     returns: None
     """
     cmd = """
-            CREATE TABLE instructors (
+            CREATE TABLE IF NOT EXISTS instructors (
                 instructor_id INTEGER PRIMARY KEY,
                 instructor_name TEXT
             );
-            CREATE TABLE classes (
+            CREATE TABLE IF NOT EXISTS classes (
                 class_id INTEGER PRIMARY KEY,
                 instructor_id INT,
                 class_name TEXT,
                 class_number TEXT,
                 FOREIGN KEY (instructor_id) REFERENCES instructors(instructor_id)
             );
-            CREATE TABLE instructor_evals (
+            CREATE TABLE IF NOT EXISTS instructor_evals (
                 instructor_eval_id INTEGER PRIMARY KEY,
                 instructor_id INT,
                 class_id INT,
@@ -181,7 +190,10 @@ def add_eval(content):
     conn = sqlite3.connect("uchi_evaluations.db")
     c = conn.cursor()
 
-    instructor_name = get_instructor(content)
+    instructors = get_instructors(content)
+    
+    ## TODO: Multiple instructors
+    instructor_name = instructors[0]
     cmd = """
     INSERT INTO instructors (instructor_name)
     VALUES ('%s')
@@ -203,12 +215,15 @@ def add_eval(content):
     c.execute(cmd)
     class_id = c.fetchone()[0]
 
-    arr = parse_table(content, "The Instructor")
-    cmd = """
-    INSERT INTO instructor_evals (instructor_id, class_id, organized, clear, interesting, pos_attitude, accessible, recommend)
-    VALUES (%d, %d, %d, %d, %d, %d, %d, %d)
-    """ % (instructor_id, class_id, arr[0], arr[1], arr[2], arr[3], arr[4], arr[5])
-    c.execute(cmd)
+    try:
+        arr = parse_table(content, "The Instructor")
+        cmd = """
+        INSERT INTO instructor_evals (instructor_id, class_id, organized, clear, interesting, pos_attitude, accessible, recommend)
+        VALUES (%d, %d, %d, %d, %d, %d, %d, %d)
+        """ % (instructor_id, class_id, arr[0], arr[1], arr[2], arr[3], arr[4], arr[5])
+        c.execute(cmd)
+    except:
+        print("Couldn't parse table")
 
     conn.commit()
     conn.close()
@@ -216,33 +231,74 @@ def add_eval(content):
 def get_all_evals():
     conn = sqlite3.connect("uchi_evaluations.db")
     c = conn.cursor()
-    cmd = "SELECT * FROM instructor_evals"
+    cmd = """
+        SELECT * FROM instructor_evals 
+        JOIN classes 
+        ON classes.class_id = instructor_evals.class_id
+        JOIN instructors
+        ON instructors.instructor_id = instructor_evals.instructor_id
+    """
     c.execute(cmd)
     res = c.fetchall()
     conn.commit()
     conn.close()
     return res
 
+def get_one_eval(instructor_id):
+    conn = sqlite3.connect("uchi_evaluations.db")
+    c = conn.cursor()
+    cmd = """SELECT * \
+        FROM instructor_evals \
+        JOIN classes \
+        ON instructor_evals.class_id  = classes.class_id \
+        WHERE instructor_evals.instructor_id = %s;
+    """ % instructor_id
+    c.execute(cmd)
+    res = c.fetchone()
+    conn.commit()
+    conn.close()
+    return res
+
 if __name__ == '__main__':
-    initialize_db()
-
+    # initialize_db()
     # scrape()
-    # driver.get("http://www.google.com")
 
-
-    # content = get_content("eval.html")
+    # content = get_content("instructor_name.html")
     # # header = get_h2(content, "The Instructor")
     # # print(header)
 
     # table = get_table(content, "The Instructor")
     # print(parse_table(content, "The Instructor"))
 
-    # print(get_instructor(content))
+
+    # instructors = get_instructors(content)
+    # print(instructors)
+
+    # conn = sqlite3.connect("uchi_evaluations.db")
+    # c = conn.cursor()
+
+    # instructor_name = get_instructor(content)
+    # cmd = """
+    # INSERT INTO instructors (instructor_name)
+    # VALUES ('%s')
+    # """ % instructor_name
+    # c.execute(cmd)
+
+    # cmd = "SELECT * FROM instructors"
+    # c.execute(cmd)
+    # res = c.fetchall()
+    # print(res)
+
+    # conn.commit()
+    # conn.close()
 
     # add_eval(content)
     evals = get_all_evals()
     for e in evals:
         print(e)
+
+    e = get_one_eval(1)
+    print(e)
 
     # heading = table.h2.string
     # print(heading)

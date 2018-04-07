@@ -8,20 +8,29 @@ head
     link(rel="stylesheet" href="/static/style.css")
     title Evaluation
 body
-    h1 #{instructor_name}
-    h2 Classes Taught
-    ul
-    each val in eval.classes_taught
-        li= val    
+    h1 #{eval.class_name}: #{instructor_name}
+    
     h2 Evaluation
     h3 How organzised is this instructor?
 
-    h3 How clear and unserstandable is this instructor?
+    p #{eval.organized}
+
+    h3 How clear and understandable is this instructor?
+
+    p #{eval.clear}
     
     h3 How interesting where this instructor's lectures?
 
+    p #{eval.interesting}
+
     h3 How positive was the instructor's attitude towards students?
+
+    p #{eval.pos_attitude}
 
     h3 How accessible was the instructor outside of class?
 
+    p #{eval.pos_attitude}
+
     h3 Would you recommend this instructor to other students?
+
+    p #{eval.recommend}
